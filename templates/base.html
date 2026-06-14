@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EcoTerrace – AI Urban Farming</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="nav-logo">🌿 EcoTerrace</a>
+    <div class="nav-links">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/community" class="nav-link">Community</a>
+    </div>
+    <div class="nav-auth" id="navAuth">
+      <button class="btn-outline" onclick="openModal('loginModal')">Login</button>
+      <button class="btn-primary" onclick="openModal('registerModal')">Sign Up</button>
+    </div>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+      <h2 class="modal-title">Welcome Back</h2>
+      <p class="modal-sub">Sign in to your EcoTerrace account</p>
+      <div id="loginError" class="error-msg" style="display:none"></div>
+      <input class="form-input" type="email" id="loginEmail" placeholder="Email address"/>
+      <input class="form-input" type="password" id="loginPassword" placeholder="Password"/>
+      <button class="btn-primary full-width" onclick="handleLogin()">Sign In</button>
+      <p class="modal-switch">Don't have an account? <span onclick="switchModal('loginModal','registerModal')">Register</span></p>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div class="modal-overlay" id="registerModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
+      <h2 class="modal-title">Join EcoTerrace</h2>
+      <p class="modal-sub">Start your urban farming journey</p>
+      <div id="registerError" class="error-msg" style="display:none"></div>
+      <input class="form-input" type="text" id="regName" placeholder="Full name"/>
+      <input class="form-input" type="email" id="regEmail" placeholder="Email address"/>
+      <input class="form-input" type="password" id="regPassword" placeholder="Password"/>
+      <input class="form-input" type="text" id="regLocation" placeholder="City (e.g. Chennai, Mumbai)"/>
+      <button class="btn-primary full-width" onclick="handleRegister()">Create Account</button>
+      <p class="modal-switch">Already have an account? <span onclick="switchModal('registerModal','loginModal')">Login</span></p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>🌿 EcoTerrace &nbsp;·&nbsp; AI-Powered Urban Farming &nbsp;·&nbsp; Built with Flask + PostgreSQL</p>
+  </footer>
+
+  <script src="/static/js/auth.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

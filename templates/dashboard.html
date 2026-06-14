@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-wrap">
+  <aside class="sidebar">
+    <div class="sidebar-user">
+      <div class="avatar">🌱</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">My Garden</div>
+        <div class="user-loc" id="sidebarLoc">📍 Chennai</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="snav-item active" onclick="showTab('overview',this)">📊 Overview</a>
+      <a class="snav-item" onclick="showTab('recommend',this)">🤖 Recommendations</a>
+      <a class="snav-item" onclick="showTab('mygarden',this)">🪴 My Garden</a>
+      <a class="snav-item" onclick="showTab('calendar',this)">📅 Garden Calendar</a>
+      <a class="snav-item" onclick="showTab('yield',this)">📊 Yield Tracker</a>
+      <a class="snav-item" onclick="showTab('timeline',this)">🌱 Growth Timeline</a>
+      <a class="snav-item" onclick="showTab('gardenmap',this)">🗺️ Garden Map</a>
+      <a class="snav-item" onclick="showTab('profile',this)">👤 My Profile</a>
+      <a class="snav-item" onclick="showTab('crops',this)">📚 Crop Library</a>
+    </nav>
+    <div class="sidebar-weather" id="sidebarWeather">
+      <div class="sw-loading">Loading weather…</div>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+
+    <!-- ── OVERVIEW TAB ── -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="dash-topbar">
+        <div>
+          <h1 class="dash-title">Welcome back! 👋</h1>
+          <p class="dash-sub">Here's your garden at a glance.</p>
+        </div>
+        <div class="notif-bell" onclick="toggleNotifications()">
+          🔔 <span class="notif-badge" id="notifCount">3</span>
+          <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-header">Notifications</div>
+            <div class="notif-item">💧 Time to water your Tomatoes!</div>
+            <div class="notif-item">🌱 Fertilize Mint today</div>
+            <div class="notif-item">🌾 Coriander ready to harvest!</div>
+            <div class="notif-item unread">🌦️ Rain expected tomorrow — skip watering</div>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon">🪴</div>
+          <div class="kpi-val" id="kpiPlants">0</div>
+          <div class="kpi-label">Plants Growing</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-val">95%</div>
+          <div class="kpi-label">Success Rate</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">⚖️</div>
+          <div class="kpi-val" id="kpiYield">0 kg</div>
+          <div class="kpi-label">Total Yield</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-val" id="kpiSaved">₹0</div>
+          <div class="kpi-label">Money Saved</div>
+        </div>
+      </div>
+      <div class="dash-grid">
+        <div class="dash-card">
+          <h3>🌱 My Plants</h3>
+          <div id="overviewPlants">
+            <p class="empty-state">No plants added yet. <span onclick="showTab('mygarden',null)">Add one →</span></p>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h3>🔔 Care Reminders</h3>
+          <div class="reminder-list" id="overviewReminders">
+            <div class="reminder-item">💧 Water your plants today</div>
+            <div class="reminder-item">🌱 Check soil moisture</div>
+            <div class="reminder-item">☀️ Monitor sunlight hours</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RECOMMENDATIONS TAB ── -->
+    <div class="tab-content" id="tab-recommend">
+      <h1 class="dash-title">🤖 AI Crop Recommender</h1>
+      <p class="dash-sub">Get personalized crop suggestions based on your terrace conditions.</p>
+      <div class="rec-form-dash">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Terrace Size (sq ft)</label>
+            <input class="form-input" type="number" id="dRecSize" placeholder="50" value="50"/>
+          </div>
+          <div class="form-group">
+            <label>Soil Type</label>
+            <select class="form-input" id="dRecSoil">
+              <option value="loamy">Loamy</option>
+              <option value="sandy">Sandy</option>
+              <option value="clay">Clay</option>
+              <option value="any">Not Sure</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sunlight</label>
+            <select class="form-input" id="dRecSunlight">
+              <option value="full">Full Sun</option>
+              <option value="partial">Partial</option>
+              <option value="shade">Shade</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input class="form-input" type="text" id="dRecLocation" placeholder="Chennai" value="Chennai"/>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="getDashRecommendations()">Get Recommendations</button>
+      </div>
+      <div id="dRecResults" class="rec-results" style="display:none">
+        <div id="dWeatherInfo" class="weather-bar"></div>
+        <div id="dCropCards" class="crop-grid"></div>
+      </div>
+    </div>
+
+    <!-- ── MY GARDEN TAB ── -->
+    <div class="tab-content" id="tab-mygarden">
+      <h1 class="dash-title">🪴 My Garden</h1>
+      <p class="dash-sub">Track all your plants and care schedules.</p>
+      <div class="add-plant-form">
+        <input class="form-input" type="text" id="newCropName" placeholder="Crop name (e.g. Tomatoes)"/>
+        <input class="form-input" type="text" id="newCropNotes" placeholder="Notes (optional)"/>
+        <button class="btn-primary" onclick="addPlant()">+ Add Plant</button>
+      </div>
+      <div id="gardenList" class="garden-list">
+        <p class="empty-state">Your garden is empty. Add your first plant above!</p>
+      </div>
+    </div>
+
+    <!-- ── GARDEN CALENDAR TAB ── -->
+    <div class="tab-content" id="tab-calendar">
+      <h1 class="dash-title">📅 Garden Calendar</h1>
+      <p class="dash-sub">Plan your planting, watering and harvesting schedule.</p>
+      <div class="calendar-wrap">
+        <div class="calendar-header">
+          <button class="btn-outline" onclick="changeMonth(-1)">← Prev</button>
+          <h2 id="calMonthTitle"></h2>
+          <button class="btn-outline" onclick="changeMonth(1)">Next →</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-legend">
+          <span class="leg-dot" style="background:#52b788"></span> Planting Day
+          <span class="leg-dot" style="background:#4895ef"></span> Watering Day
+          <span class="leg-dot" style="background:#f4a261"></span> Harvest Day
+          <span class="leg-dot" style="background:#e76f51"></span> Fertilizing Day
+        </div>
+      </div>
+      <div class="cal-add-event">
+        <h3>Add Event</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input class="form-input" type="date" id="evDate"/>
+          </div>
+          <div class="form-group">
+            <label>Crop</label>
+            <input class="form-input" type="text" id="evCrop" placeholder="e.g. Tomatoes"/>
+          </div>
+          <div class="form-group">
+            <label>Event Type</label>
+            <select class="form-input" id="evType">
+              <option value="plant">🌱 Planting</option>
+              <option value="water">💧 Watering</option>
+              <option value="harvest">🌾 Harvest</option>
+              <option value="fertilize">🌿 Fertilizing</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addCalendarEvent()">+ Add to Calendar</button>
+      </div>
+    </div>
+
+    <!-- ── YIELD TRACKER TAB ── -->
+    <div class="tab-content" id="tab-yield">
+      <h1 class="dash-title">📊 Yield Tracker</h1>
+      <p class="dash-sub">Track how much you've harvested and money saved.</p>
+      <div class="yield-summary">
+        <div class="yield-stat"><span id="totalYieldKg">0</span><label>Total kg Harvested</label></div>
+        <div class="yield-stat"><span id="totalYieldRs">₹0</span><label>Money Saved</label></div>
+        <div class="yield-stat"><span id="totalHarvests">0</span><label>Harvest Sessions</label></div>
+        <div class="yield-stat"><span id="bestCrop">—</span><label>Best Performing Crop</label></div>
+      </div>
+      <div class="yield-add">
+        <h3>Log a Harvest</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Crop Name</label>
+            <input class="form-input" type="text" id="yieldCrop" placeholder="e.g. Tomatoes"/>
+          </div>
+          <div class="form-group">
+            <label>Weight (kg)</label>
+            <input class="form-input" type="number" id="yieldKg" placeholder="e.g. 1.5" step="0.1"/>
+          </div>
+          <div class="form-group">
+            <label>Market Price (₹/kg)</label>
+            <input class="form-input" type="number" id="yieldPrice" placeholder="e.g. 80"/>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input class="form-input" type="date" id="yieldDate"/>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="logHarvest()">+ Log Harvest</button>
+      </div>
+      <div id="yieldList" class="yield-list"></div>
+    </div>
+
+    <!-- ── GROWTH TIMELINE TAB ── -->
+    <div class="tab-content" id="tab-timeline">
+      <h1 class="dash-title">🌱 Crop Growth Timeline</h1>
+      <p class="dash-sub">Track day-by-day progress of each crop from seed to harvest.</p>
+      <div class="timeline-select">
+        <label>Select Crop:</label>
+        <select class="form-input" id="timelineCrop" onchange="renderTimeline()" style="max-width:300px">
+          <option value="Tomatoes">🍅 Tomatoes (75 days)</option>
+          <option value="Chilli">🌶️ Chilli Peppers (90 days)</option>
+          <option value="Spinach">🥬 Spinach (40 days)</option>
+          <option value="Mint">🌿 Mint (30 days)</option>
+          <option value="Okra">🫛 Okra (60 days)</option>
+          <option value="Coriander">🌿 Coriander (21 days)</option>
+        </select>
+        <input class="form-input" type="date" id="timelineStart" onchange="renderTimeline()" style="max-width:200px"/>
+      </div>
+      <div id="timelineWrap" class="timeline-wrap"></div>
+    </div>
+
+    <!-- ── GARDEN MAP TAB ── -->
+    <div class="tab-content" id="tab-gardenmap">
+      <h1 class="dash-title">🗺️ Garden Map</h1>
+      <p class="dash-sub">Visually arrange your plants on your terrace layout.</p>
+      <div class="garden-map-wrap">
+        <div class="map-toolbar">
+          <span style="font-size:0.9rem;color:var(--text-muted)">Click a plant then click a grid cell to place it:</span>
+          <div class="plant-picker" id="plantPicker"></div>
+          <button class="btn-outline" onclick="clearMap()" style="margin-left:auto">🗑️ Clear All</button>
+        </div>
+        <div class="garden-grid" id="gardenGrid"></div>
+        <div class="map-legend">
+          <span style="font-size:0.85rem;color:var(--text-muted)">Grid represents your terrace. Each cell = ~4 sq ft</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROFILE TAB ── -->
+    <div class="tab-content" id="tab-profile">
+      <h1 class="dash-title">👤 My Profile</h1>
+      <p class="dash-sub">Update your personal details and garden preferences.</p>
+      <div class="profile-wrap">
+        <div class="profile-avatar-section">
+          <div class="profile-avatar" id="profileAvatar">🌱</div>
+          <div class="avatar-picker">
+            <span onclick="setAvatar('🌱')">🌱</span><span onclick="setAvatar('🌿')">🌿</span>
+            <span onclick="setAvatar('🍅')">🍅</span><span onclick="setAvatar('🌾')">🌾</span>
+            <span onclick="setAvatar('🌻')">🌻</span><span onclick="setAvatar('🥬')">🥬</span>
+          </div>
+        </div>
+        <div class="profile-form">
+          <h3>Personal Details</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input class="form-input" type="text" id="profName" placeholder="Your name"/>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input class="form-input" type="email" id="profEmail" placeholder="your@email.com"/>
+            </div>
+          </div>
+          <h3 style="margin-top:1.5rem">Garden Preferences</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>City</label>
+              <input class="form-input" type="text" id="profLocation" placeholder="Chennai"/>
+            </div>
+            <div class="form-group">
+              <label>Terrace Size (sq ft)</label>
+              <input class="form-input" type="number" id="profSize" placeholder="50"/>
+            </div>
+            <div class="form-group">
+              <label>Soil Type</label>
+              <select class="form-input" id="profSoil">
+                <option value="loamy">Loamy</option>
+                <option value="sandy">Sandy</option>
+                <option value="clay">Clay</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Sunlight</label>
+              <select class="form-input" id="profSunlight">
+                <option value="full">Full Sun</option>
+                <option value="partial">Partial</option>
+                <option value="shade">Shade</option>
+              </select>
+            </div>
+          </div>
+          <h3 style="margin-top:1.5rem">Gardening Experience</h3>
+          <div class="exp-picker">
+            <div class="exp-opt" onclick="setExp('beginner',this)">🌱<br>Beginner</div>
+            <div class="exp-opt" onclick="setExp('intermediate',this)">🌿<br>Intermediate</div>
+            <div class="exp-opt" onclick="setExp('expert',this)">🌳<br>Expert</div>
+          </div>
+          <button class="btn-primary" style="margin-top:1.5rem" onclick="saveProfile()">💾 Save Profile</button>
+          <div id="profileMsg" style="display:none;margin-top:1rem;color:var(--green-mid);font-weight:600"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CROP LIBRARY TAB ── -->
+    <div class="tab-content" id="tab-crops">
+      <h1 class="dash-title">📚 Crop Library</h1>
+      <p class="dash-sub">Browse all 30+ crops available for urban terrace farming worldwide.</p>
+      <div id="cropLibrary" class="crop-grid"></div>
+    </div>
+
+  </main>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+<script src="/static/js/newfeatures.js"></script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="community-wrap">
+  <div class="container">
+    <div class="community-header">
+      <div>
+        <div class="section-label">Community</div>
+        <h1 class="dash-title">Urban Gardeners Forum</h1>
+        <p class="dash-sub">Share tips, ask questions, and learn from fellow gardeners.</p>
+      </div>
+      <button class="btn-primary" onclick="openNewPost()">+ New Post</button>
+    </div>
+
+    <div class="category-filters">
+      <button class="cat-btn active" onclick="filterPosts('all', this)">All</button>
+      <button class="cat-btn" onclick="filterPosts('Crop Tips', this)">🌱 Crop Tips</button>
+      <button class="cat-btn" onclick="filterPosts('Pest Control', this)">🐛 Pest Control</button>
+      <button class="cat-btn" onclick="filterPosts('Watering', this)">💧 Watering</button>
+      <button class="cat-btn" onclick="filterPosts('General', this)">💬 General</button>
+    </div>
+
+    <div id="forumPosts" class="forum-posts">
+      <div class="loading-posts">Loading posts…</div>
+    </div>
+  </div>
+</div>
+
+<!-- New Post Modal -->
+<div class="modal-overlay" id="newPostModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('newPostModal')">✕</button>
+    <h2 class="modal-title">Create New Post</h2>
+    <input class="form-input" type="text" id="postTitle" placeholder="Post title"/>
+    <select class="form-input" id="postCategory">
+      <option value="General">General</option>
+      <option value="Crop Tips">Crop Tips</option>
+      <option value="Pest Control">Pest Control</option>
+      <option value="Watering">Watering</option>
+    </select>
+    <textarea class="form-input" id="postContent" rows="5" placeholder="Share your question or tip…"></textarea>
+    <button class="btn-primary full-width" onclick="submitPost()">Post to Community</button>
+  </div>
+</div>
+
+<!-- View Post Modal -->
+<div class="modal-overlay" id="viewPostModal">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('viewPostModal')">✕</button>
+    <div id="postDetail"></div>
+    <div class="comments-section">
+      <h3>Comments</h3>
+      <div id="commentsList"></div>
+      <div class="add-comment">
+        <input class="form-input" type="text" id="commentInput" placeholder="Add a comment…"/>
+        <button class="btn-primary" onclick="submitComment()">Post</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/community.js"></script>
+{% endblock %}

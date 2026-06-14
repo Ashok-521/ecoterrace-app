@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <span class="hero-badge">🤖 AI-Powered Urban Farming</span>
+    <h1 class="hero-title">Grow Fresh Food<br><em>on Your Terrace</em></h1>
+    <p class="hero-sub">EcoTerrace combines artificial intelligence with real-time weather data to give you personalized crop recommendations, care reminders, and community support — all in one platform.</p>
+    <div class="hero-actions">
+      <button class="btn-primary large" onclick="openModal('registerModal')">Start Growing Free</button>
+      <a href="#how-it-works" class="btn-ghost large">See How It Works ↓</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">95%</span><span class="stat-label">Crop Success Rate</span></div>
+      <div class="stat"><span class="stat-num">35%</span><span class="stat-label">Higher Yield</span></div>
+      <div class="stat"><span class="stat-num">22%</span><span class="stat-label">Cost Savings</span></div>
+      <div class="stat"><span class="stat-num">50+</span><span class="stat-label">Urban Gardeners</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="crop-cards-float">
+      <div class="float-card" style="--d:0s">🍅 Tomatoes<span>95% match</span></div>
+      <div class="float-card" style="--d:0.3s">🌿 Mint<span>91% match</span></div>
+      <div class="float-card" style="--d:0.6s">🌶️ Chilli<span>88% match</span></div>
+      <div class="float-card" style="--d:0.9s">🥬 Spinach<span>85% match</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Recommender -->
+<section class="quick-rec" id="how-it-works">
+  <div class="container">
+    <div class="section-label">AI Crop Recommender</div>
+    <h2 class="section-title">Get Your Personalized<br>Crop Recommendations</h2>
+    <p class="section-sub">Tell us about your terrace and we'll suggest the best crops using real-time weather data.</p>
+
+    <div class="rec-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Terrace Size (sq ft)</label>
+          <input class="form-input" type="number" id="recSize" placeholder="e.g. 50" value="50"/>
+        </div>
+        <div class="form-group">
+          <label>Soil Type</label>
+          <select class="form-input" id="recSoil">
+            <option value="loamy">Loamy</option>
+            <option value="sandy">Sandy</option>
+            <option value="clay">Clay</option>
+            <option value="any">Not Sure</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sunlight</label>
+          <select class="form-input" id="recSunlight">
+            <option value="full">Full Sun (6+ hrs)</option>
+            <option value="partial">Partial (3-6 hrs)</option>
+            <option value="shade">Shade (&lt;3 hrs)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Your City</label>
+          <input class="form-input" type="text" id="recLocation" placeholder="e.g. Chennai" value="Chennai"/>
+        </div>
+      </div>
+      <button class="btn-primary large" onclick="getRecommendations()">
+        <span id="recBtnText">🔍 Get AI Recommendations</span>
+      </button>
+    </div>
+
+    <div id="recResults" class="rec-results" style="display:none">
+      <div id="weatherInfo" class="weather-bar"></div>
+      <div id="cropCards" class="crop-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="container">
+    <div class="section-label">Platform Features</div>
+    <h2 class="section-title">Everything You Need to<br>Grow Successfully</h2>
+    <p class="section-sub" style="margin-bottom:2rem">Click any feature to explore it in detail.</p>
+    <div class="features-grid">
+      <div class="feature-card clickable" onclick="openFeature('ai')">
+        <div class="feature-icon">🤖</div>
+        <h3>AI Recommendations</h3>
+        <p>Crop suggestions based on 15+ parameters including weather, soil, space and sunlight.</p>
+        <span class="feature-link">Explore →</span>
+      </div>
+      <div class="feature-card clickable" onclick="openFeature('disease')">
+        <div class="feature-icon">🔬</div>
+        <h3>Disease Detection</h3>
+        <p>Camera-based plant disease detection with 92% accuracy powered by computer vision.</p>
+        <span class="feature-link">Explore →</span>
+      </div>
+      <div class="feature-card clickable" onclick="openFeature('reminders')">
+        <div class="feature-icon">⏰</div>
+        <h3>Smart Reminders</h3>
+        <p>Automated watering, fertilizing and harvesting reminders tailored to your crops.</p>
+        <span class="feature-link">Explore →</span>
+      </div>
+      <div class="feature-card clickable" onclick="openFeature('weather')">
+        <div class="feature-icon">🌦️</div>
+        <h3>Weather Integration</h3>
+        <p>Real-time weather data from OpenWeatherMap for accurate, timely guidance.</p>
+        <span class="feature-link">Explore →</span>
+      </div>
+      <div class="feature-card clickable" onclick="openFeature('community')">
+        <div class="feature-icon">👥</div>
+        <h3>Community Forums</h3>
+        <p>Connect with urban gardeners, share tips and get expert mentorship.</p>
+        <span class="feature-link">Explore →</span>
+      </div>
+      <div class="feature-card clickable" onclick="openFeature('marketplace')">
+        <div class="feature-icon">🛒</div>
+        <h3>Marketplace</h3>
+        <p>Buy seeds, tools and fertilizers from local suppliers with secure checkout.</p>
+        <span class="feature-link">Explore →</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURE MODALS ── -->
+
+<!-- AI Recommendations Modal -->
+<div class="modal-overlay" id="feature-ai">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('feature-ai')">✕</button>
+    <div class="fmodal-icon">🤖</div>
+    <h2 class="modal-title">AI Crop Recommendations</h2>
+    <p class="modal-sub">Our AI engine analyses 15+ parameters to suggest the perfect crops for your space.</p>
+    <div class="fmodal-how">
+      <h4>How it works:</h4>
+      <div class="fmodal-steps">
+        <div class="fstep"><span class="fstep-num">1</span><div><strong>You enter your details</strong> — terrace size, soil type, sunlight hours and city.</div></div>
+        <div class="fstep"><span class="fstep-num">2</span><div><strong>We fetch live weather</strong> — temperature, humidity and forecast from OpenWeatherMap API.</div></div>
+        <div class="fstep"><span class="fstep-num">3</span><div><strong>AI matches crops</strong> — filters 30+ global crops by temperature range, soil and space needs.</div></div>
+        <div class="fstep"><span class="fstep-num">4</span><div><strong>You get ranked results</strong> — top 5 crops with success probability scores.</div></div>
+      </div>
+    </div>
+    <div class="fmodal-stats">
+      <div class="fstat"><span>95%</span>Accuracy</div>
+      <div class="fstat"><span>30+</span>Global Crops</div>
+      <div class="fstat"><span>15+</span>Parameters</div>
+      <div class="fstat"><span>245ms</span>Response Time</div>
+    </div>
+    <button class="btn-primary full-width" onclick="closeModal('feature-ai'); document.getElementById('how-it-works').scrollIntoView({behavior:'smooth'})">Try It Now →</button>
+  </div>
+</div>
+
+<!-- Disease Detection Modal -->
+<div class="modal-overlay" id="feature-disease">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('feature-disease')">✕</button>
+    <div class="fmodal-icon">🔬</div>
+    <h2 class="modal-title">Plant Disease Detection</h2>
+    <p class="modal-sub">Upload a photo of your plant and our AI will identify diseases instantly.</p>
+    <div class="disease-demo">
+      <div class="disease-upload" id="diseaseUploadArea" onclick="document.getElementById('diseaseFile').click()">
+        <div id="diseasePreview">
+          <div style="font-size:3rem">📸</div>
+          <p>Click to upload a plant photo</p>
+          <p style="font-size:0.8rem;color:var(--text-muted)">JPG, PNG supported</p>
+        </div>
+        <input type="file" id="diseaseFile" accept="image/*" style="display:none" onchange="previewDisease(event)"/>
+      </div>
+      <button class="btn-primary full-width" style="margin-top:1rem" onclick="analyseDisease()">🔍 Analyse Plant</button>
+      <div id="diseaseResult" style="display:none" class="disease-result"></div>
+    </div>
+    <div class="fmodal-how" style="margin-top:1.5rem">
+      <h4>Diseases it can detect:</h4>
+      <div class="disease-tags">
+        <span class="tag">🍂 Leaf Blight</span>
+        <span class="tag">🟤 Root Rot</span>
+        <span class="tag">⬜ Powdery Mildew</span>
+        <span class="tag">🐛 Pest Damage</span>
+        <span class="tag">💛 Nutrient Deficiency</span>
+        <span class="tag">🔴 Bacterial Spot</span>
+        <span class="tag">🌿 Healthy Plant</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Smart Reminders Modal -->
+<div class="modal-overlay" id="feature-reminders">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('feature-reminders')">✕</button>
+    <div class="fmodal-icon">⏰</div>
+    <h2 class="modal-title">Smart Care Reminders</h2>
+    <p class="modal-sub">Never forget to water, fertilize or harvest again. Set up automated reminders for your crops.</p>
+    <div class="reminder-setup">
+      <h4 style="margin-bottom:1rem">Set a reminder for your crop:</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Crop Name</label>
+          <input class="form-input" type="text" id="reminderCrop" placeholder="e.g. Tomatoes"/>
+        </div>
+        <div class="form-group">
+          <label>Reminder Type</label>
+          <select class="form-input" id="reminderType">
+            <option value="water">💧 Watering</option>
+            <option value="fertilize">🌱 Fertilizing</option>
+            <option value="harvest">🌾 Harvesting</option>
+            <option value="pesticide">🐛 Pest Check</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Every (days)</label>
+          <input class="form-input" type="number" id="reminderDays" value="3" min="1" max="30"/>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addReminder()">+ Add Reminder</button>
+      <div id="reminderList" class="reminder-list" style="margin-top:1.5rem"></div>
+    </div>
+    <div class="fmodal-stats" style="margin-top:1.5rem">
+      <div class="fstat"><span>3x</span>More Consistent</div>
+      <div class="fstat"><span>35%</span>Better Yield</div>
+      <div class="fstat"><span>0</span>Missed Waterings</div>
+    </div>
+  </div>
+</div>
+
+<!-- Weather Modal -->
+<div class="modal-overlay" id="feature-weather">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('feature-weather')">✕</button>
+    <div class="fmodal-icon">🌦️</div>
+    <h2 class="modal-title">Live Weather Integration</h2>
+    <p class="modal-sub">Check real-time weather for any city and see how it affects your crops.</p>
+    <div class="weather-checker">
+      <div style="display:flex;gap:0.75rem;margin-bottom:1rem">
+        <input class="form-input" type="text" id="weatherCity" placeholder="Enter any city worldwide..." style="margin-bottom:0;flex:1"/>
+        <button class="btn-primary" onclick="checkWeather()">Check</button>
+      </div>
+      <div id="weatherModalResult" class="weather-modal-result" style="display:none"></div>
+    </div>
+    <div class="fmodal-how" style="margin-top:1.5rem">
+      <h4>What weather data we use:</h4>
+      <div class="fmodal-steps">
+        <div class="fstep"><span class="fstep-num">🌡️</span><div><strong>Temperature</strong> — filters crops that can survive current heat or cold</div></div>
+        <div class="fstep"><span class="fstep-num">💧</span><div><strong>Humidity</strong> — adjusts watering recommendations accordingly</div></div>
+        <div class="fstep"><span class="fstep-num">☁️</span><div><strong>Conditions</strong> — alerts you about frost, extreme heat or heavy rain</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Community Modal -->
+<div class="modal-overlay" id="feature-community">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('feature-community')">✕</button>
+    <div class="fmodal-icon">👥</div>
+    <h2 class="modal-title">Community Forums</h2>
+    <p class="modal-sub">Join thousands of urban gardeners sharing tips, success stories and advice.</p>
+    <div class="community-preview">
+      <div class="preview-post" onclick="window.location='/community'">
+        <div class="pp-cat">🌱 Crop Tips</div>
+        <div class="pp-title">Best crops for Chennai terrace in summer?</div>
+        <div class="pp-meta">👤 Ashok · 💬 12 comments</div>
+      </div>
+      <div class="preview-post" onclick="window.location='/community'">
+        <div class="pp-cat">🐛 Pest Control</div>
+        <div class="pp-title">How to deal with aphids organically?</div>
+        <div class="pp-meta">👤 Priya · 💬 8 comments</div>
+      </div>
+      <div class="preview-post" onclick="window.location='/community'">
+        <div class="pp-cat">💬 General</div>
+        <div class="pp-title">My first harvest — 3.5 kg tomatoes!</div>
+        <div class="pp-meta">👤 Ravi · 💬 24 comments</div>
+      </div>
+    </div>
+    <div class="fmodal-stats">
+      <div class="fstat"><span>50+</span>Gardeners</div>
+      <div class="fstat"><span>35%</span>Higher Success</div>
+      <div class="fstat"><span>4</span>Categories</div>
+    </div>
+    <button class="btn-primary full-width" onclick="window.location='/community'">Join the Community →</button>
+  </div>
+</div>
+
+<!-- Marketplace Modal -->
+<div class="modal-overlay" id="feature-marketplace">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('feature-marketplace')">✕</button>
+    <div class="fmodal-icon">🛒</div>
+    <h2 class="modal-title">Garden Marketplace</h2>
+    <p class="modal-sub">Buy everything you need for your terrace garden from trusted local suppliers.</p>
+    <div class="marketplace-preview">
+      <div class="mp-item">
+        <div class="mp-emoji">🌱</div>
+        <div class="mp-info"><div class="mp-name">Tomato Seeds (Pack of 50)</div><div class="mp-price">₹ 120</div></div>
+        <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.8rem">Add to Cart</button>
+      </div>
+      <div class="mp-item">
+        <div class="mp-emoji">🪣</div>
+        <div class="mp-info"><div class="mp-name">Organic Compost (5kg)</div><div class="mp-price">₹ 350</div></div>
+        <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.8rem">Add to Cart</button>
+      </div>
+      <div class="mp-item">
+        <div class="mp-emoji">🪴</div>
+        <div class="mp-info"><div class="mp-name">Terrace Grow Bags (Set of 10)</div><div class="mp-price">₹ 450</div></div>
+        <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.8rem">Add to Cart</button>
+      </div>
+      <div class="mp-item">
+        <div class="mp-emoji">💧</div>
+        <div class="mp-info"><div class="mp-name">Drip Irrigation Kit</div><div class="mp-price">₹ 899</div></div>
+        <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.8rem">Add to Cart</button>
+      </div>
+      <div class="mp-item">
+        <div class="mp-emoji">🌾</div>
+        <div class="mp-info"><div class="mp-name">Neem Oil Spray (500ml)</div><div class="mp-price">₹ 199</div></div>
+        <button class="btn-primary" style="padding:0.4rem 1rem;font-size:0.8rem">Add to Cart</button>
+      </div>
+    </div>
+    <div class="mp-cart-bar">
+      🛒 <span id="cartCount">0</span> items in cart &nbsp;·&nbsp; Total: ₹<span id="cartTotal">0</span>
+      <button class="btn-primary" style="margin-left:auto;padding:0.4rem 1rem;font-size:0.85rem">Checkout</button>
+    </div>
+  </div>
+</div>
+
+<!-- Impact -->
+<section class="impact">
+  <div class="container">
+    <div class="impact-grid">
+      <div class="impact-text">
+        <div class="section-label">Real Results</div>
+        <h2 class="section-title">Proven Impact Across<br>Urban Gardens</h2>
+        <ul class="impact-list">
+          <li>🌱 Beginner with 50 sq ft balcony — <strong>3.5 kg tomatoes</strong> in first season</li>
+          <li>🏡 Family of four — grows <strong>25% of household vegetables</strong></li>
+          <li>💰 Average saving of <strong>₹1,600/month</strong> on grocery bills</li>
+          <li>💧 <strong>35% less water</strong> usage through smart irrigation tips</li>
+          <li>🌍 Up to <strong>90% reduction</strong> in food transportation emissions</li>
+        </ul>
+        <button class="btn-primary" onclick="openModal('registerModal')">Join 50+ Gardeners →</button>
+      </div>
+      <div class="impact-visual">
+        <div class="impact-card">
+          <div class="ic-emoji">🏆</div>
+          <div class="ic-num">95%</div>
+          <div class="ic-label">Crop Success Rate</div>
+          <div class="ic-bar"><div class="ic-fill" style="width:95%"></div></div>
+        </div>
+        <div class="impact-card">
+          <div class="ic-emoji">📈</div>
+          <div class="ic-num">+35%</div>
+          <div class="ic-label">Yield Improvement</div>
+          <div class="ic-bar"><div class="ic-fill" style="width:70%"></div></div>
+        </div>
+        <div class="impact-card">
+          <div class="ic-emoji">💸</div>
+          <div class="ic-num">-22%</div>
+          <div class="ic-label">Gardening Costs</div>
+          <div class="ic-bar"><div class="ic-fill" style="width:55%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/recommendations.js"></script>
+<script src="/static/js/features.js"></script>
+{% endblock %}
