@@ -5,6 +5,22 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import requests
 import os
+import pickle
+import numpy as np
+
+# ── Load ML Models ──────────────────────────────
+MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
+
+def load_model(filename):
+    path = os.path.join(MODEL_DIR, filename)
+    if os.path.exists(path):
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+    return None
+
+crop_rf_model   = load_model('crop_rf_model.pkl')
+crop_scaler     = load_model('crop_scaler.pkl')
+crop_label_enc  = load_model('crop_label_encoder.pkl')
 
 app = Flask(__name__)
 app.secret_key = 'ecoterrace-secret-key-change-in-production'
@@ -444,6 +460,52 @@ def add_comment(post_id):
     db.session.add(comment)
     db.session.commit()
     return jsonify({'success': True})
+
+# ─────────────────────────────────────────────
+# ROUTES - ML CROP RECOMMENDATION (v2)
+# ─────────────────────────────────────────────
+
+@app.route('/api/ml-recommend', methods=['POST'])
+def ml_recommend():
+    """Random Forest crop recommendation using soil & weather inputs."""
+    if not crop_rf_model:
+        return jsonify({'success': False, 'message': 'ML model not loaded'}), 500
+
+    data = request.get_json()
+    try:
+        N          = float(data.get('N', 90))
+        P          = float(data.get('P', 42))
+        K          = float(data.get('K', 43))
+        ph         = float(data.get('ph', 6.5))
+        rainfall   = float(data.get('rainfall', 200))
+        location   = data.get('location', 'Chennai')
+
+        weather    = get_weather_data(location)
+        temp       = weather['temperature']
+        humidity   = weather['humidity']
+
+        features   = np.array([[N, P, K, temp, humidity, ph, rainfall]])
+        scaled     = crop_scaler.transform(features)
+        pred_idx   = crop_rf_model.predict(scaled)[0]
+        crop_name  = crop_label_enc.inverse_transform([pred_idx])[0]
+
+        # Top-3 probabilities
+        proba      = crop_rf_model.predict_proba(scaled)[0]
+        top3_idx   = np.argsort(proba)[::-1][:3]
+        top3       = [
+            {'crop': crop_label_enc.inverse_transform([i])[0], 'confidence': round(float(proba[i]) * 100, 1)}
+            for i in top3_idx
+        ]
+
+        return jsonify({
+            'success': True,
+            'recommended_crop': crop_name,
+            'top3': top3,
+            'weather': weather,
+            'inputs': {'N': N, 'P': P, 'K': K, 'ph': ph, 'rainfall': rainfall}
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
 
 # ─────────────────────────────────────────────
 # ROUTES - WEATHER API
