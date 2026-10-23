@@ -7,6 +7,8 @@ import requests
 import os
 import pickle
 import numpy as np
+import json
+from werkzeug.utils import secure_filename
 
 # ── Load ML Models ──────────────────────────────
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
@@ -21,6 +23,33 @@ def load_model(filename):
 crop_rf_model   = load_model('crop_rf_model.pkl')
 crop_scaler     = load_model('crop_scaler.pkl')
 crop_label_enc  = load_model('crop_label_encoder.pkl')
+
+# Disease detection model (lazy load to save memory)
+_disease_model  = None
+_disease_classes = None
+
+def get_disease_model():
+    global _disease_model, _disease_classes
+    if _disease_model is None:
+        try:
+            import tensorflow as tf
+            model_path = os.path.join(MODEL_DIR, 'plant_disease_model.h5')
+            classes_path = os.path.join(MODEL_DIR, 'disease_classes.json')
+            if os.path.exists(model_path):
+                _disease_model = tf.keras.models.load_model(model_path)
+            if os.path.exists(classes_path):
+                with open(classes_path) as f:
+                    _disease_classes = json.load(f)
+        except Exception as e:
+            print(f"Disease model load error: {e}")
+    return _disease_model, _disease_classes
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 app = Flask(__name__)
 app.secret_key = 'ecoterrace-secret-key-change-in-production'
@@ -506,6 +535,66 @@ def ml_recommend():
         })
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 400
+
+# ─────────────────────────────────────────────
+# ROUTES - DISEASE DETECTION API (v2)
+# ─────────────────────────────────────────────
+
+@app.route('/api/disease-detect', methods=['POST'])
+def disease_detect():
+    """MobileNetV2 CNN plant disease detection from uploaded image."""
+    if 'image' not in request.files:
+        return jsonify({'success': False, 'message': 'No image uploaded'}), 400
+
+    file = request.files['image']
+    if file.filename == '' or not allowed_file(file.filename):
+        return jsonify({'success': False, 'message': 'Invalid file type'}), 400
+
+    model, classes = get_disease_model()
+    if model is None:
+        return jsonify({'success': False, 'message': 'Disease model not loaded'}), 500
+
+    try:
+        import tensorflow as tf
+        from PIL import Image
+        import io
+
+        # Read and preprocess image
+        img_bytes = file.read()
+        img = Image.open(io.BytesIO(img_bytes)).convert('RGB').resize((224, 224))
+        img_array = np.array(img) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
+
+        # Predict
+        predictions = model.predict(img_array, verbose=0)[0]
+        top3_idx = np.argsort(predictions)[::-1][:3]
+
+        top3 = [
+            {
+                'disease': classes[i].replace('___', ' - ').replace('_', ' '),
+                'confidence': round(float(predictions[i]) * 100, 1),
+                'plant': classes[i].split('___')[0],
+                'condition': classes[i].split('___')[1].replace('_', ' ')
+            }
+            for i in top3_idx
+        ]
+
+        result = top3[0]
+        is_healthy = 'healthy' in result['disease'].lower()
+
+        return jsonify({
+            'success': True,
+            'disease': result['disease'],
+            'plant': result['plant'],
+            'condition': result['condition'],
+            'confidence': result['confidence'],
+            'is_healthy': is_healthy,
+            'top3': top3,
+            'recommendation': 'No treatment needed.' if is_healthy
+                              else f"Detected {result['condition']} in {result['plant']}. Consult an agricultural expert."
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # ─────────────────────────────────────────────
 # ROUTES - WEATHER API
