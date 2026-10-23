@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTerrace 2.0 — AI Demo</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f0; color: #222; }
+
+        header {
+            background: linear-gradient(135deg, #2e7d32, #66bb6a);
+            color: white; padding: 24px 32px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        header h1 { font-size: 1.6rem; }
+        header span { font-size: 0.9rem; opacity: 0.85; }
+
+        .container { max-width: 900px; margin: 32px auto; padding: 0 16px; }
+
+        .card {
+            background: white; border-radius: 12px;
+            padding: 28px; margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card h2 { font-size: 1.1rem; color: #2e7d32; margin-bottom: 20px;
+                   display: flex; align-items: center; gap: 8px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 4px; font-weight: 500; }
+        input, select {
+            width: 100%; padding: 10px 12px; border: 1.5px solid #ddd;
+            border-radius: 8px; font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus { outline: none; border-color: #4caf50; }
+
+        .btn {
+            background: #2e7d32; color: white; border: none;
+            padding: 12px 28px; border-radius: 8px; font-size: 1rem;
+            cursor: pointer; margin-top: 20px; width: 100%;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #1b5e20; }
+        .btn:disabled { background: #aaa; cursor: not-allowed; }
+
+        .result { display: none; margin-top: 20px; }
+        .result.show { display: block; }
+
+        .top-crop {
+            background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+            border: 2px solid #4caf50; border-radius: 10px;
+            padding: 20px; text-align: center; margin-bottom: 16px;
+        }
+        .top-crop .name { font-size: 1.8rem; font-weight: 700; color: #2e7d32; text-transform: capitalize; }
+        .top-crop .conf { font-size: 1rem; color: #555; margin-top: 4px; }
+
+        .top3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .crop-item {
+            background: #f9f9f9; border-radius: 8px; padding: 12px;
+            text-align: center; border: 1px solid #e0e0e0;
+        }
+        .crop-item .cname { font-weight: 600; text-transform: capitalize; color: #333; }
+        .crop-item .cconf { font-size: 0.85rem; color: #888; }
+
+        .bar { background: #e0e0e0; border-radius: 4px; height: 6px; margin-top: 6px; }
+        .bar-fill { background: #4caf50; height: 6px; border-radius: 4px; transition: width 0.6s; }
+
+        .weather-row {
+            display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;
+        }
+        .weather-chip {
+            background: #e3f2fd; border-radius: 20px; padding: 6px 14px;
+            font-size: 0.85rem; color: #1565c0;
+        }
+
+        .error { background: #ffebee; border: 1px solid #ef9a9a;
+                 border-radius: 8px; padding: 14px; color: #c62828; margin-top: 16px; }
+
+        /* Disease upload section */
+        .upload-area {
+            border: 2px dashed #4caf50; border-radius: 10px;
+            padding: 32px; text-align: center; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .upload-area:hover { background: #f1f8e9; }
+        .upload-area input { display: none; }
+        .upload-area .icon { font-size: 2.5rem; }
+        .upload-area p { color: #666; margin-top: 8px; font-size: 0.95rem; }
+        #preview { max-width: 200px; border-radius: 8px; margin: 12px auto 0; display: none; }
+
+        .spinner { display: none; text-align: center; padding: 20px; color: #666; }
+        .spinner.show { display: block; }
+
+        .badge-healthy { background: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .badge-disease { background: #fff3e0; color: #e65100; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>🌿 EcoTerrace 2.0 — AI Demo</h1>
+        <span>Multi-Modal AI Platform for Smart Urban Farming</span>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- Crop Recommendation -->
+    <div class="card">
+        <h2>🌱 ML Crop Recommendation <small style="font-weight:400;color:#888;font-size:0.8rem">(Random Forest · 99.32% accuracy)</small></h2>
+        <div class="grid">
+            <div>
+                <label>Nitrogen (N) kg/ha</label>
+                <input type="number" id="N" value="90" min="0" max="200">
+            </div>
+            <div>
+                <label>Phosphorus (P) kg/ha</label>
+                <input type="number" id="P" value="42" min="0" max="200">
+            </div>
+            <div>
+                <label>Potassium (K) kg/ha</label>
+                <input type="number" id="K" value="43" min="0" max="200">
+            </div>
+            <div>
+                <label>Soil pH</label>
+                <input type="number" id="ph" value="6.5" min="0" max="14" step="0.1">
+            </div>
+            <div>
+                <label>Rainfall (mm)</label>
+                <input type="number" id="rainfall" value="200" min="0" max="500">
+            </div>
+            <div>
+                <label>Location (city)</label>
+                <input type="text" id="location" value="Chennai">
+            </div>
+        </div>
+        <button class="btn" onclick="getCropRecommendation()">🤖 Get AI Recommendation</button>
+
+        <div class="spinner" id="crop-spinner">⏳ Analyzing soil & weather data...</div>
+
+        <div class="result" id="crop-result">
+            <div class="top-crop">
+                <div style="font-size:0.85rem;color:#777;margin-bottom:4px">RECOMMENDED CROP</div>
+                <div class="name" id="crop-name">—</div>
+                <div class="conf" id="crop-conf">—</div>
+            </div>
+            <div style="font-size:0.85rem;color:#555;margin-bottom:8px;font-weight:600">TOP 3 PREDICTIONS</div>
+            <div class="top3" id="crop-top3"></div>
+            <div class="weather-row" id="crop-weather"></div>
+        </div>
+        <div class="error" id="crop-error" style="display:none"></div>
+    </div>
+
+    <!-- Disease Detection -->
+    <div class="card">
+        <h2>🍃 Plant Disease Detection <small style="font-weight:400;color:#888;font-size:0.8rem">(MobileNetV2 CNN · 38 classes)</small></h2>
+        <div class="upload-area" onclick="document.getElementById('img-input').click()">
+            <input type="file" id="img-input" accept="image/*" onchange="previewImage(this)">
+            <div class="icon">📷</div>
+            <p>Click to upload a plant leaf image</p>
+            <p style="font-size:0.8rem;color:#aaa">JPG, PNG, WEBP supported</p>
+        </div>
+        <img id="preview" alt="Preview">
+        <button class="btn" id="detect-btn" onclick="detectDisease()" style="display:none">🔍 Detect Disease</button>
+
+        <div class="spinner" id="disease-spinner">⏳ Analyzing plant image...</div>
+
+        <div class="result" id="disease-result">
+            <div class="top-crop" id="disease-top">
+                <div style="font-size:0.85rem;color:#777;margin-bottom:4px">DETECTED CONDITION</div>
+                <div class="name" id="disease-name">—</div>
+                <div style="margin-top:8px" id="disease-badge"></div>
+                <div style="font-size:0.85rem;color:#555;margin-top:8px" id="disease-rec"></div>
+            </div>
+            <div style="font-size:0.85rem;color:#555;margin-bottom:8px;font-weight:600">TOP 3 PREDICTIONS</div>
+            <div class="top3" id="disease-top3"></div>
+        </div>
+        <div class="error" id="disease-error" style="display:none"></div>
+    </div>
+
+</div>
+
+<script>
+async function getCropRecommendation() {
+    const btn = document.querySelector('.btn');
+    const spinner = document.getElementById('crop-spinner');
+    const result = document.getElementById('crop-result');
+    const errDiv = document.getElementById('crop-error');
+
+    spinner.classList.add('show');
+    result.classList.remove('show');
+    errDiv.style.display = 'none';
+
+    const payload = {
+        N: parseFloat(document.getElementById('N').value),
+        P: parseFloat(document.getElementById('P').value),
+        K: parseFloat(document.getElementById('K').value),
+        ph: parseFloat(document.getElementById('ph').value),
+        rainfall: parseFloat(document.getElementById('rainfall').value),
+        location: document.getElementById('location').value
+    };
+
+    try {
+        const res = await fetch('/api/ml-recommend', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        spinner.classList.remove('show');
+
+        if (data.success) {
+            document.getElementById('crop-name').textContent = data.recommended_crop;
+            document.getElementById('crop-conf').textContent = `Confidence: ${data.top3[0].confidence}%`;
+
+            document.getElementById('crop-top3').innerHTML = data.top3.map(t => `
+                <div class="crop-item">
+                    <div class="cname">${t.crop}</div>
+                    <div class="cconf">${t.confidence}%</div>
+                    <div class="bar"><div class="bar-fill" style="width:${t.confidence}%"></div></div>
+                </div>
+            `).join('');
+
+            document.getElementById('crop-weather').innerHTML = `
+                <div class="weather-chip">🌡️ ${data.weather.temperature}°C</div>
+                <div class="weather-chip">💧 ${data.weather.humidity}% humidity</div>
+                <div class="weather-chip">📍 ${data.weather.city}</div>
+                <div class="weather-chip">☁️ ${data.weather.description}</div>
+            `;
+            result.classList.add('show');
+        } else {
+            errDiv.textContent = data.message;
+            errDiv.style.display = 'block';
+        }
+    } catch(e) {
+        spinner.classList.remove('show');
+        errDiv.textContent = 'Server error: ' + e.message;
+        errDiv.style.display = 'block';
+    }
+}
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.getElementById('preview');
+            img.src = e.target.result;
+            img.style.display = 'block';
+            document.getElementById('detect-btn').style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function detectDisease() {
+    const spinner = document.getElementById('disease-spinner');
+    const result = document.getElementById('disease-result');
+    const errDiv = document.getElementById('disease-error');
+    const file = document.getElementById('img-input').files[0];
+
+    if (!file) return;
+
+    spinner.classList.add('show');
+    result.classList.remove('show');
+    errDiv.style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const res = await fetch('/api/disease-detect', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        spinner.classList.remove('show');
+
+        if (data.success) {
+            document.getElementById('disease-name').textContent = data.disease;
+            document.getElementById('disease-badge').innerHTML = data.is_healthy
+                ? '<span class="badge-healthy">✅ Healthy Plant</span>'
+                : '<span class="badge-disease">⚠️ Disease Detected</span>';
+            document.getElementById('disease-rec').textContent = data.recommendation;
+
+            document.getElementById('disease-top3').innerHTML = data.top3.map(t => `
+                <div class="crop-item">
+                    <div class="cname">${t.condition}</div>
+                    <div class="cconf">${t.plant} · ${t.confidence}%</div>
+                    <div class="bar"><div class="bar-fill" style="width:${t.confidence}%"></div></div>
+                </div>
+            `).join('');
+            result.classList.add('show');
+        } else {
+            errDiv.textContent = data.message;
+            errDiv.style.display = 'block';
+        }
+    } catch(e) {
+        spinner.classList.remove('show');
+        errDiv.textContent = 'Server error: ' + e.message;
+        errDiv.style.display = 'block';
+    }
+}
+</script>
+
+</body>
+</html>

@@ -342,6 +342,10 @@ def dashboard():
 def community():
     return render_template('community.html')
 
+@app.route('/demo')
+def demo():
+    return render_template('demo.html')
+
 # ─────────────────────────────────────────────
 # ROUTES - AUTH API
 # ─────────────────────────────────────────────
