@@ -5,10 +5,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import requests
 import os
-import pickle
-import numpy as np
 import json
 from werkzeug.utils import secure_filename
+
+try:
+    import pickle
+    import numpy as np
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
 
 # ── Load ML Models ──────────────────────────────
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
@@ -20,9 +25,9 @@ def load_model(filename):
             return pickle.load(f)
     return None
 
-crop_rf_model   = load_model('crop_rf_model.pkl')
-crop_scaler     = load_model('crop_scaler.pkl')
-crop_label_enc  = load_model('crop_label_encoder.pkl')
+crop_rf_model   = load_model('crop_rf_model.pkl') if ML_AVAILABLE else None
+crop_scaler     = load_model('crop_scaler.pkl') if ML_AVAILABLE else None
+crop_label_enc  = load_model('crop_label_encoder.pkl') if ML_AVAILABLE else None
 
 # Disease detection model (lazy load to save memory)
 _disease_model  = None
@@ -501,8 +506,8 @@ def add_comment(post_id):
 @app.route('/api/ml-recommend', methods=['POST'])
 def ml_recommend():
     """Random Forest crop recommendation using soil & weather inputs."""
-    if not crop_rf_model:
-        return jsonify({'success': False, 'message': 'ML model not loaded'}), 500
+    if not ML_AVAILABLE or not crop_rf_model:
+        return jsonify({'success': False, 'message': 'ML model not available on this server. Run locally with scikit-learn installed.'}), 503
 
     data = request.get_json()
     try:
